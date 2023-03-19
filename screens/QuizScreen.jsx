@@ -1,17 +1,17 @@
-import { StyleSheet, Text, View, FlatList } from 'react-native'
+import { StyleSheet, Text, View, FlatList, SafeAreaView, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView } from 'react-native'
 import axios from 'axios';
 import Option from '../components/Option';
 import Button from '../components/Button';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import * as Animatable from 'react-native-animatable';
 
 
-const shuffleArray=(array)=> {
+const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
   }
 }
 
@@ -22,6 +22,7 @@ const QuizScreen = ({route}) => {
     const [points, setPoints] = useState(0);
     const [isAnswered, setIsAnswered] = useState(false);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [isLoading, setIsloading] = useState(false);
 
     const navigation = useNavigation();
 
@@ -29,18 +30,20 @@ const QuizScreen = ({route}) => {
 
 
     useEffect(() => {
-        axios.get(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=${difficulty}`)
-        .then((response) => {
-            const allQuestions = response.data.results;
-            setQuestions(allQuestions);
-            setOptions(generateOptionsAndShuffle(response.data.results[0]))
-        })
-        .catch(error => {console.log(error)})
+      setIsloading(true);
+      axios.get(`https://opentdb.com/api.php?amount=10&${category}&${difficulty}`)
+      .then((response) => {
+          const allQuestions = response.data.results;
+          setQuestions(allQuestions);
+          setOptions(generateOptionsAndShuffle(response.data.results[0]))
+          setIsloading(false)
+      })
+      .catch(error => {console.log(error)})
     }, [])
 
-    const generateOptionsAndShuffle=(_question)=>{
-      const options= [..._question.incorrect_answers]
-      options.push(_question.correct_answer)
+    const generateOptionsAndShuffle = (question) => {
+      const options= [...question?.incorrect_answers]
+      options.push(question?.correct_answer)
    
       shuffleArray(options)
       
@@ -50,18 +53,14 @@ const QuizScreen = ({route}) => {
     const handlSelectedOption = (option) => {
       setIsAnswered(true);
       setSelectedAnswer(option)
-      if(option===questions[questionIndex]?.correct_answer){
+      if(option === questions[questionIndex]?.correct_answer){
         setPoints(points + 10);
-      }
-
-      if(questionIndex===9){
-        // handleShowResult()
       }
     }
 
-    const handleNextPress=()=>{
-      setQuestionIndex(questionIndex+1)
-      setOptions(generateOptionsAndShuffle(questions[questionIndex+1]))
+    const handleNextPress = () =>{
+      setQuestionIndex(questionIndex + 1)
+      setOptions(generateOptionsAndShuffle(questions[questionIndex + 1]))
       setSelectedAnswer(null);
       setIsAnswered(false);
     }
@@ -69,49 +68,59 @@ const QuizScreen = ({route}) => {
     const progressPercentage = Math.floor((questionIndex/10) * 100);
 
   return (
-    <SafeAreaView>
-      <View style={[styles.progressContainer, {padding: 10}]}>
-        <Text>Quiz Challenge</Text>
-        <Text>Points: {points}</Text>
-      </View>
-
-      <View style={[styles.progressContainer, {marginHorizontal: 10}]}>
-        <Text>Your Progress</Text>
-        <Text>({questionIndex + 1}/10) questions answered</Text>
-      </View>
-
-      <View style={styles.progressBarContainer}>
-        <Text style={[styles.progressBar, {width: `${progressPercentage}%`,}]} />
-      </View>
-
-      <View style={styles.questionAreaContainer}>
-        <Text style={styles.question}>{questions[questionIndex]?.question}</Text>
-        <View style={styles.optionsContainer}>
-          <FlatList 
-            data={options}
-            renderItem={({item}) => <Option option={item} onPress={() => handlSelectedOption(item)} style={
-              isAnswered && item === questions[questionIndex]?.correct_answer ? 
-                {backgroundColor: 'green'} : 
-              item === selectedAnswer && item !== questions[questionIndex]?.correct_answer && 
-                {backgroundColor: 'red'}
-            }/>}
-            keyExtractor={() => Math.random()}
-          />
+    <SafeAreaView style={{flex: 1, backgroundColor: '#00296b', padding: 10}}> 
+      
+      <View style={styles.progressContainer}>
+        
+        <View style={[styles.progress, {padding: 10}]}>
+          <Text style={{color: '#caf0f8', fontWeight: 'bold'}}>Quiz Challenge</Text>
+          <Text style={{color: '#caf0f8'}}>Points: {points}</Text>
         </View>
+
+        <View style={[styles.progress, {marginHorizontal: 10}]}>
+          <Text style={{color: '#caf0f8', fontWeight: 'bold'}}>Your Progress</Text>
+          <Text style={{color: '#caf0f8'}}>({questionIndex + 1}/10) questions answered</Text>
+        </View>
+
+        <View style={styles.progressBarContainer}>
+          <Text style={[styles.progressBar, {width: `${progressPercentage}%`,}]} />
+        </View>
+      
       </View>
 
-      <View>
+      {isLoading ? 
+        <View style={{flex: 1, justifyContent: 'center', alignItems:'center'}}>
+          <ActivityIndicator size="large" color="#ffc300" />
+        </View>
+      : 
+        <Animatable.View animation='flipInX' style={styles.questionAreaContainer}>
+          <Text style={styles.question}>{questions[questionIndex]?.question}</Text>
+          <View style={styles.optionsContainer}>
+            <FlatList 
+              data={options}
+              renderItem={({item}) => <Option option={item} onPress={() => handlSelectedOption(item)} style={
+                isAnswered && item === questions[questionIndex]?.correct_answer ? 
+                  {backgroundColor: '#c7f9cc', borderWidth: 1, borderColor: 'green'} : 
+                item === selectedAnswer && item !== questions[questionIndex]?.correct_answer && 
+                  {backgroundColor: '#f08080', borderWidth: 1, borderColor: 'red'}
+              }/>}
+              keyExtractor={() => Math.random()}
+            />
+          </View>
+        </Animatable.View>}
+
+      <View style={{justifyContent: 'center', alignItems:'center'}}>
         {isAnswered && selectedAnswer === questions[questionIndex]?.correct_answer ?
-          <View style={styles.messageContainer}>
-            <FontAwesome5 name="smile-beam" size={24} color="green" />
+          <Animatable.View animation='zoomIn' style={styles.messageContainer}>
+            <FontAwesome5 name="smile-beam" size={28} color="green" />
             <Text style={styles.message}>Correct!</Text>
-          </View>
+          </Animatable.View>
         : isAnswered && selectedAnswer !== questions[questionIndex]?.correct_answer && 
-          <View style={styles.messageContainer}>
-            <FontAwesome5 name="sad-tear" size={24} color="red" />
+          <Animatable.View animation='zoomIn' style={styles.messageContainer}>
+            <FontAwesome5 name="sad-tear" size={28} color="red" />
             <Text style={styles.message}>Oops... Correct answer was {questions[questionIndex]?.correct_answer}</Text>
-          </View>
-      }
+          </Animatable.View>
+        }
       </View>
 
       {questionIndex!==9 && <Button onPress={handleNextPress}>Next</Button> }
@@ -128,13 +137,22 @@ export default QuizScreen
 
 const styles = StyleSheet.create({
   progressContainer: {
+    backgroundColor: '#023e8a',
+    marginTop: 40,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fdc500'
+  },
+  progress: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    
   },
   questionAreaContainer: {
-    marginTop: 10,
-    backgroundColor: '#F0F8FF',
+    marginTop: 15,
+    backgroundColor: '#caf0f8',
     padding: 10,
     borderRadius: 6
   },
@@ -146,7 +164,13 @@ const styles = StyleSheet.create({
     marginTop: 12
   },
   messageContainer: {
-    height: 150,
+    marginTop: 15,
+    backgroundColor: '#caf0f8',
+    width: 350,
+    height: 100,
+    borderWidth: 2,
+    borderColor: '#0077b6',
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -155,18 +179,17 @@ const styles = StyleSheet.create({
     marginLeft: 10
   },
   progressBarContainer: {
-    backgroundColor: "white",
+    backgroundColor: "#caf0f8",
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
     height: 10,
     borderRadius: 20,
     justifyContent: "center",
-    marginTop: 20,
-    marginLeft: 10,
+    marginTop: 20
   },
   progressBar: {
-    backgroundColor: "#FFC0CB",
+    backgroundColor: "#ff8fab",
     borderRadius: 12,
     position: "absolute",
     left: 0,

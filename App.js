@@ -11,10 +11,11 @@ export default function App() {
 
   return (
     <NavigationContainer>
+      <StatusBar style='light'/>
       <Stack.Navigator>
-        <Stack.Screen name='Home' component={HomeScreen} />
-        <Stack.Screen name='Quiz' component={QuizScreen} />
-        <Stack.Screen name='Result' component={ResultScreen} />
+        <Stack.Screen name='Home' component={HomeScreen} options={{headerShown: false}} />
+        <Stack.Screen name='Quiz' component={QuizScreen} options={{headerShown: false}} />
+        <Stack.Screen name='Result' component={ResultScreen} options={{headerShown: false}} />
       </Stack.Navigator>
     </NavigationContainer>
   )

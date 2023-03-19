@@ -19,8 +19,8 @@ const styles = StyleSheet.create({
     optionsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderWidth: 0.5,
-        borderColor: '#00FFFF',
+        borderWidth: 1,
+        borderColor: '#00b4d8',
         marginVertical: 10,
         borderRadius: 20
     },
