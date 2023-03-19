@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import Dropdown from '../components/Dropdown'
 import {CATEGORIES, DIFFICULTY_LEVEL} from '../data/QuestionsCategoryData';
 import { useNavigation } from '@react-navigation/native';
-import QuizImage from '../assets/QuizImage.png';
+import QuizImage from '../../assets/QuizImage.png';
 import * as Animatable from 'react-native-animatable';
 
 const HomeScreen = () => {

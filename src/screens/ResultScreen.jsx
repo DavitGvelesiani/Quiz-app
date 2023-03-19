@@ -2,7 +2,7 @@ import { SafeAreaView, StyleSheet, Text, View, ImageBackground } from 'react-nat
 import React from 'react'
 import Button from '../components/Button'
 import * as Animatable from 'react-native-animatable';
-import backgroundImage from '../assets/background2.png'
+import backgroundImage from '../../assets/background2.png'
 
 const ResultScreen = ({navigation, route}) => {
     const {points} = route.params
